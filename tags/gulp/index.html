@@ -96,36 +96,17 @@
 <p>首先挑最简单的 <code>Return stream</code>方法，这时跑任务不是顺序执行的。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">gulp.task(<span class="string">'script'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{  </div><div class="line">    <span class="keyword">return</span> gulp.src(<span class="string">'js/**'</span>)</div><div class="line">        .pipe(concat(<span class="string">'script.min.js'</span>))</div><div class="line">        .pipe(uglify())</div><div class="line">        .pipe(gulp.dest(<span class="string">'./dist'</span>))</div><div class="line">});</div><div class="line">gulp.task(<span class="string">'test'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{  </div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'test task'</span>);</div><div class="line">});</div><div class="line">gulp.task(<span class="string">'default'</span>, [<span class="string">'script'</span>, <span class="string">'test'</span>])</div></pre></td></tr></table></figure>
 
-
-<p>我们给test任务添加依赖，任务成功顺序执行。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">gulp.task(<span class="string">'test'</span>, [<span class="string">'script'</span>], <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{  </div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'test task'</span>);</div><div class="line">});</div></pre></td></tr></table></figure>
-
-<p>现在我们换用 <code>callback</code>方法</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">gulp.task(<span class="string">'script'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(cb)</span> </span>{  </div><div class="line">    gulp.src(<span class="string">'js/**'</span>)</div><div class="line">        .pipe(concat(<span class="string">'script.min.js'</span>))</div><div class="line">        .pipe(uglify())</div><div class="line">        .pipe(gulp.dest(<span class="string">'./dist'</span>));</div><div class="line">    cb();</div><div class="line">});</div></pre></td></tr></table></figure>
-
-<p>什吗玩意儿，根本不起作用，当然不起作用了， 正确的用法：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">gulp.task(<span class="string">'script'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(cb)</span> </span>{  </div><div class="line">    gulp.src(<span class="string">'js/**'</span>)</div><div class="line">        .pipe(concat(<span class="string">'script.min.js'</span>))</div><div class="line">        .pipe(uglify())</div><div class="line">        .pipe(gulp.dest(<span class="string">'./dist'</span>))</div><div class="line">        .on(<span class="string">'end'</span>, cb);</div><div class="line">});</div></pre></td></tr></table></figure>
-
-<p>任务成功顺序执行。 promise方法同理，需要加入依赖</p>
-<p>假如我们有多个压缩合并的任务,同样要添加依赖</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">gulp.task(<span class="string">'test'</span>, [<span class="string">'script'</span>,<span class="string">'script2'</span>,<span class="string">'script3'</span>], <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{  </div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'test task'</span>);</div><div class="line">});</div></pre></td></tr></table></figure>
-
-<p>如果不想嵌入那么多依赖，也可以这样嵌套用</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">gulp.task(<span class="string">'test'</span>, <span class="function"><span class="keyword">function</span><span class="params">()</span> </span>{</div><div class="line">    gulp.run(<span class="string">'cookie'</span>, <span class="string">'bootstrap'</span>);</div><div class="line">});</div><div class="line">gulp.task(<span class="string">'test'</span>, [<span class="string">'script'</span>,<span class="string">'script2'</span>,<span class="string">'script3'</span>], <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{  </div><div class="line">    gulp.run(<span class="string">'test'</span>);</div><div class="line">});</div></pre></td></tr></table></figure>
-
-<h2 id="总结">总结</h2>
-<ul>
-<li>要顺序执行任务，先执行的任务需要做异步处理(返回文档流/callback/promise)</li>
-<li>要顺序执行任务, 必须使用依赖</li>
-</ul>
-<h2 id="参考">参考</h2>
-<p><a href="http://cameronspear.com/blog/handling-sync-tasks-with-gulp-js" target="_blank" rel="external">Handling Sync Tasks with Gulp JS</a></p>
-
+<p>
+        
+          <p class="article-more-link">
+            <a href="/2014/12/17/gulp-async-task/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
       
-        <a data-url="http://ajiegao.com/2014/12/17/gulp-async-task/" data-id="rewf3c80x4hhn7j8" class="article-share-link">Share</a>
+        <a data-url="http://ajiegao.com/2014/12/17/gulp-async-task/" data-id="rewf3c80x4hhn7j8" class="article-share-link" data-share="baidu">Share</a>
       
 
       
@@ -234,6 +215,17 @@ var duoshuoQuery = {short_name:"ajiegao"};
 
 
 <!-- 百度分享 start -->
+
+<div id="article-share-box" class="article-share-box">
+  <div id="bdshare" class="bdsharebuttonbox article-share-links">
+    <a class="article-share-weibo" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a class="article-share-weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a class="article-share-qq" data-cmd="sqq" title="分享到QQ"></a>
+    <a class="article-share-renren" data-cmd="renren" title="分享到人人网"></a>
+    <a class="article-share-more" data-cmd="more" title="更多"></a>
+  </div>
+</div>
+<script>window._bd_share_config={"common":{},"share":{"bdCustomStyle":"nocss.css"}};with(document)0[(getElementsByTagName("head")[0]||body).appendChild(createElement("script")).src="http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion="+~(-new Date()/36e5)];</script>
 
 <!-- 百度分享 end -->
 
